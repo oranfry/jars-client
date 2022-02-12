@@ -2,19 +2,17 @@
 
 namespace jars\client;
 
-class HttpApiClient extends ApiClient
+class HttpClient implements \jars\contract\Client
 {
+    protected $asuser;
+    protected $token;
+    protected $touched;
     protected $url;
+    protected $version;
 
-    public function groups(string $name, ?string $min_version = null)
+    public function __construct(string $url)
     {
-        $request = new ApiRequest('/report/' . $name . '/groups');
-
-        if ($min_version) {
-            $request->headers[] = 'X-Min-Version: ' . $min_version;
-        }
-
-        return json_decode($this->execute($request));
+        $this->url = $url;
     }
 
     public function url()
@@ -29,13 +27,25 @@ class HttpApiClient extends ApiClient
         return $this->url;
     }
 
+    public function token()
+    {
+        if (func_num_args()) {
+            $prev = $this->token;
+            $this->token = (string) func_get_arg(0);
+
+            return $prev;
+        }
+
+        return $this->token;
+    }
+
     public function execute($request)
     {
         if (!preg_match('@^/@', $request->endpoint)) {
             error_response('Endpoint should start with /');
         }
 
-        $ch = curl_init($this->url . '/api' . $request->endpoint);
+        $ch = curl_init($this->url . $request->endpoint);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -51,8 +61,8 @@ class HttpApiClient extends ApiClient
 
         $headers = [];
 
-        if ($this->auth) {
-            $headers[] = 'X-Auth: ' . $this->auth;
+        if ($this->token) {
+            $headers[] = 'X-Auth: ' . $this->token;
         }
 
         $headers[] = 'Content-Type: ' . $request->contentType;
@@ -103,7 +113,7 @@ class HttpApiClient extends ApiClient
         $response = json_decode($this->execute($request));
 
         if (is_object($response) && @$response->token) {
-            $this->auth = $response->token;
+            $this->token = $response->token;
         }
 
         return $response;
@@ -117,9 +127,9 @@ class HttpApiClient extends ApiClient
         return json_decode($this->execute($request));
     }
 
-    public function report(string $name, string $group, ?string $min_version = null)
+    public function group(string $report, string $group, ?string $min_version = null)
     {
-        $request = new ApiRequest('/report/' . $name . '/' . $group);
+        $request = new ApiRequest('/report/' . $report . '/' . $group);
 
         if ($min_version) {
             $request->headers[] = 'X-Min-Version: ' . $min_version;
@@ -128,8 +138,23 @@ class HttpApiClient extends ApiClient
         return json_decode($this->execute($request));
     }
 
-    public function save(array $data)
+    public function groups(string $report, ?string $min_version = null)
     {
+        $request = new ApiRequest('/report/' . $report . '/groups');
+
+        if ($min_version) {
+            $request->headers[] = 'X-Min-Version: ' . $min_version;
+        }
+
+        return json_decode($this->execute($request));
+    }
+
+    public function save(array $data, bool $dryrun = false)
+    {
+        if ($dryrun) {
+            error_response('Dryrun not supported over http...yet!');
+        }
+
         if (!$data) {
             return $data;
         }
@@ -187,6 +212,14 @@ class HttpApiClient extends ApiClient
 
         return json_decode($this->execute($request));
     }
-}
 
-require_once __DIR__ . '/ApiRequest.php';
+    public function version()
+    {
+        return $this->version;
+    }
+
+    public function of(string $url)
+    {
+        return new static($url);
+    }
+}
