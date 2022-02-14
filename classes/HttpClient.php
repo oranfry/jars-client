@@ -5,6 +5,7 @@ namespace jars\client;
 class HttpClient implements \jars\contract\Client
 {
     protected $asuser;
+    protected $content_type;
     protected $token;
     protected $touched;
     protected $url;
@@ -80,8 +81,14 @@ class HttpClient implements \jars\contract\Client
                 $this->version = $groups[1];
             }
 
+            if (preg_match('/^Content-Type:\s*([a-f0-9]{64})$/i', trim($header_line), $groups)) {
+                $this->content_type = $groups[1];
+            }
+
             return strlen($header_line);
         });
+
+        $this->content_type = null;
 
         $result = curl_exec($ch);
 
@@ -149,18 +156,10 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute($request));
     }
 
-    public function save(array $data, bool $dryrun = false)
+    public function save(array $lines)
     {
-        if ($dryrun) {
-            error_response('Dryrun not supported over http...yet!');
-        }
-
-        if (!$data) {
-            return $data;
-        }
-
         $request = new ApiRequest('/');
-        $request->data = $data;
+        $request->data = $lines;
 
         return json_decode($this->execute($request));
     }
@@ -173,27 +172,18 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute($request));
     }
 
-    public function unlink($linetype, $id, $parent)
-    {
-        $line = (object) [
-            'id' => $id,
-            'parent' => $parent,
-        ];
-
-        $request = new ApiRequest('/' . $linetype . '/unlink');
-        $request->data = [$line];
-
-        return json_decode($this->execute($request));
-    }
-
     public function get($linetype, $id)
     {
         return json_decode($this->execute(new ApiRequest("/{$linetype}/{$id}")));
     }
 
-    public function record($table, $id)
+    public function record($table, $id, &$content_type)
     {
-        return $this->execute(new ApiRequest("/record/{$table}/{$id}"));
+        $data = $this->execute(new ApiRequest("/record/{$table}/{$id}"));
+
+        $content_type = $this->content_type;
+
+        return $data;
     }
 
     public function fields($linetype)
@@ -201,14 +191,10 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute(new ApiRequest("/{$linetype}/fields")));
     }
 
-    public function preview(array $data)
+    public function preview(array $lines)
     {
-        if (!$data) {
-            return $data;
-        }
-
         $request = new ApiRequest('/preview');
-        $request->data = $data;
+        $request->data = $lines;
 
         return json_decode($this->execute($request));
     }
@@ -216,6 +202,16 @@ class HttpClient implements \jars\contract\Client
     public function version()
     {
         return $this->version;
+    }
+
+    public function h2n(string $h)
+    {
+        return json_decode($this->execute(new ApiRequest('/h2n/' . $h)));
+    }
+
+    public function n2h(int $n)
+    {
+        return json_decode($this->execute(new ApiRequest('/n2h/' . $n)));
     }
 
     public function of(string $url)
