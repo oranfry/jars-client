@@ -177,7 +177,7 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute(new ApiRequest("/{$linetype}/{$id}")));
     }
 
-    public function record($table, $id, &$content_type)
+    public function record($table, $id, &$content_type = null)
     {
         $data = $this->execute(new ApiRequest("/record/{$table}/{$id}"));
 
