@@ -40,8 +40,12 @@ class HttpClient implements \jars\contract\Client
         return $this->token;
     }
 
-    public function execute(ApiRequest $request, array &$response_headers = [])
+    private function execute(ApiRequest $request, ?array &$response_headers = null)
     {
+        if ($response_headers == null) {
+            $response_headers = [];
+        }
+
         if (!preg_match('@^/@', $request->endpoint)) {
             error_response('Endpoint should start with /');
         }
