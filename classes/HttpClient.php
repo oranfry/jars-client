@@ -40,7 +40,7 @@ class HttpClient implements \jars\contract\Client
         return $this->token;
     }
 
-    public function execute($request)
+    public function execute(ApiRequest $request, array &$response_headers = [])
     {
         if (!preg_match('@^/@', $request->endpoint)) {
             error_response('Endpoint should start with /');
@@ -76,7 +76,11 @@ class HttpClient implements \jars\contract\Client
             curl_setopt($ch, CURLOPT_VERBOSE, true);
         }
 
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $header_line) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $header_line) use (&$response_headers) {
+            if (preg_match('/^([^:\s]+)\s*:\s*(.*)/i', trim($header_line), $groups)) {
+                $response_headers[$groups[1]] = $groups[2];
+            }
+
             if (preg_match('/^X-Version:\s*([a-f0-9]{64})$/i', trim($header_line), $groups)) {
                 $this->version = $groups[1];
             }
@@ -160,16 +164,22 @@ class HttpClient implements \jars\contract\Client
     {
         $request = new ApiRequest('/');
         $request->data = $lines;
+        $response = $this->execute($request, $headers);
 
-        return json_decode($this->execute($request));
+        $this->version = $headers['X-Version'];
+
+        return json_decode($response);
     }
 
     public function delete($linetype, $id)
     {
         $request = new ApiRequest('/' . $linetype . '/' . $id);
         $request->method = 'DELETE';
+        $response = $this->execute($request, $headers);
 
-        return json_decode($this->execute($request));
+        $this->version = $headers['X-Version'];
+
+        return json_decode($response);
     }
 
     public function get($linetype, $id)
@@ -195,8 +205,11 @@ class HttpClient implements \jars\contract\Client
     {
         $request = new ApiRequest('/preview');
         $request->data = $lines;
+        $response = $this->execute($request, $headers);
 
-        return json_decode($this->execute($request));
+        $this->version = $headers['X-Version'];
+
+        return json_decode($response);
     }
 
     public function version()
@@ -217,5 +230,12 @@ class HttpClient implements \jars\contract\Client
     public function of(string $url)
     {
         return new static($url);
+    }
+
+    public function refresh() : string
+    {
+        $this->execute(new ApiRequest('/refresh', $headers));
+
+        return $headers['X-Version'];
     }
 }
