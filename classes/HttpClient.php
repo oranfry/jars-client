@@ -226,6 +226,17 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute(new ApiRequest('/h2n/' . $h)));
     }
 
+    public function linetypes(?string $report = null) : array
+    {
+        $endpoint = '/linetypes';
+
+        if ($report) {
+            $endpoint .= '/' . $report;
+        }
+
+        return json_decode($this->execute(new ApiRequest($endpoint)));
+    }
+
     public function n2h(int $n)
     {
         return json_decode($this->execute(new ApiRequest('/n2h/' . $n)));
@@ -241,5 +252,10 @@ class HttpClient implements \jars\contract\Client
         $this->execute(new ApiRequest('/refresh', $headers));
 
         return $headers['X-Version'];
+    }
+
+    public function reports() : array
+    {
+        return json_decode($this->execute(new ApiRequest('/reports')));
     }
 }
