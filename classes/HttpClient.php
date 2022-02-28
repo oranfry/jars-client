@@ -211,8 +211,6 @@ class HttpClient implements \jars\contract\Client
         $request->data = $lines;
         $response = $this->execute($request, $headers);
 
-        $this->version = $headers['X-Version'];
-
         return json_decode($response);
     }
 
