@@ -240,7 +240,7 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute(new ApiRequest('/n2h/' . $n)));
     }
 
-    public function of(string $url)
+    public static function of(string $url)
     {
         return new static($url);
     }
