@@ -202,7 +202,7 @@ class HttpClient implements \jars\contract\Client
 
     public function fields($linetype)
     {
-        return json_decode($this->execute(new ApiRequest("/{$linetype}/fields")));
+        return json_decode($this->execute(new ApiRequest("/fields/{$linetype}")));
     }
 
     public function preview(array $lines)
