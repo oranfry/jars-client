@@ -226,10 +226,10 @@ class HttpClient implements \jars\contract\Client
 
     public function linetypes(?string $report = null) : array
     {
-        $endpoint = '/linetypes';
-
         if ($report) {
-            $endpoint .= '/' . $report;
+            $endpoint = '/report/' . $report . '/linetypes';
+        } else {
+            $endpoint = '/linetypes';
         }
 
         return json_decode($this->execute(new ApiRequest($endpoint)));
