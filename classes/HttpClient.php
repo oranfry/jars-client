@@ -6,6 +6,7 @@ class HttpClient implements \jars\contract\Client
 {
     protected $asuser;
     protected $content_type;
+    protected $filename;
     protected $token;
     protected $touched;
     protected $url;
@@ -93,10 +94,15 @@ class HttpClient implements \jars\contract\Client
                 $this->content_type = $groups[1];
             }
 
+            if (preg_match('/^Content-Disposition:.*;\s*filename\s*=([^;]+)/i', trim($header_line), $groups)) {
+                $this->filename = trim($groups[1]);
+            }
+
             return strlen($header_line);
         });
 
         $this->content_type = null;
+        $this->filename = null;
 
         $result = curl_exec($ch);
 
@@ -117,7 +123,7 @@ class HttpClient implements \jars\contract\Client
         return $this->touched;
     }
 
-    public function login($username, $password)
+    public function login(string $username, string $password): ?string
     {
         $request = new ApiRequest('/auth/login');
         $request->data = (object) [
@@ -134,7 +140,7 @@ class HttpClient implements \jars\contract\Client
         return $response;
     }
 
-    public function logout()
+    public function logout(): void
     {
         $request = new ApiRequest('/auth/logout');
         $request->method = 'POST';
@@ -153,7 +159,7 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute($request));
     }
 
-    public function groups(string $report, ?string $min_version = null)
+    public function groups(string $report, ?string $min_version = null): array
     {
         $request = new ApiRequest('/report/' . $report . '/groups');
 
@@ -164,7 +170,7 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute($request));
     }
 
-    public function save(array $lines)
+    public function save(array $lines): array
     {
         $request = new ApiRequest('/');
         $request->data = $lines;
@@ -175,7 +181,7 @@ class HttpClient implements \jars\contract\Client
         return json_decode($response);
     }
 
-    public function delete($linetype, $id)
+    public function delete(string $linetype, string $id): array
     {
         $request = new ApiRequest('/' . $linetype . '/' . $id);
         $request->method = 'DELETE';
@@ -186,26 +192,27 @@ class HttpClient implements \jars\contract\Client
         return json_decode($response);
     }
 
-    public function get($linetype, $id)
+    public function get(string $linetype, string $id): ?object
     {
         return json_decode($this->execute(new ApiRequest("/{$linetype}/{$id}")));
     }
 
-    public function record($table, $id, &$content_type = null)
+    public function record(string $table, string $id, ?string &$content_type = null, ?string &$filename = null): ?string
     {
         $data = $this->execute(new ApiRequest("/record/{$table}/{$id}"));
 
         $content_type = $this->content_type;
+        $filename = $this->filename;
 
         return $data;
     }
 
-    public function fields($linetype)
+    public function fields(string $linetype): array
     {
         return json_decode($this->execute(new ApiRequest("/fields/{$linetype}")));
     }
 
-    public function preview(array $lines)
+    public function preview(array $lines): array
     {
         $request = new ApiRequest('/preview');
         $request->data = $lines;
@@ -214,17 +221,17 @@ class HttpClient implements \jars\contract\Client
         return json_decode($response);
     }
 
-    public function version()
+    public function version(): ?string
     {
         return $this->version;
     }
 
-    public function h2n(string $h)
+    public function h2n(string $h): ?int
     {
         return json_decode($this->execute(new ApiRequest('/h2n/' . $h)));
     }
 
-    public function linetypes(?string $report = null) : array
+    public function linetypes(?string $report = null): array
     {
         if ($report) {
             $endpoint = '/report/' . $report . '/linetypes';
@@ -235,24 +242,24 @@ class HttpClient implements \jars\contract\Client
         return json_decode($this->execute(new ApiRequest($endpoint)));
     }
 
-    public function n2h(int $n)
+    public function n2h(int $n): string
     {
         return json_decode($this->execute(new ApiRequest('/n2h/' . $n)));
     }
 
-    public static function of(string $url)
+    public static function of(string $url): static
     {
         return new static($url);
     }
 
-    public function refresh() : string
+    public function refresh(): string
     {
         $this->execute(new ApiRequest('/refresh', $headers));
 
         return $headers['X-Version'];
     }
 
-    public function reports() : array
+    public function reports(): array
     {
         return json_decode($this->execute(new ApiRequest('/reports')));
     }
