@@ -140,12 +140,14 @@ class HttpClient implements \jars\contract\Client
         return $response;
     }
 
-    public function logout(): void
+    public function logout(): bool
     {
         $request = new ApiRequest('/auth/logout');
         $request->method = 'POST';
 
-        return json_decode($this->execute($request));
+        $response = json_decode($this->execute($request));
+
+        return $response->success ?? false;
     }
 
     public function group(string $report, string $group, ?string $min_version = null)
