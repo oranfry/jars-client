@@ -113,11 +113,16 @@ class HttpClient implements \jars\contract\Client
         return $result;
     }
 
-    public function touch()
+    public function touch(): ?object
     {
         if ($this->touched === null) {
             $data = json_decode($this->execute(new ApiRequest('/touch')));
-            $this->touched = is_object($data) && !property_exists($data, 'error');
+
+            if (!is_object($data) || property_exists($data, 'error')) {
+                return null;
+            }
+
+            $this->touched = $data;
         }
 
         return $this->touched;
