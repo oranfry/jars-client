@@ -225,7 +225,13 @@ class HttpClient implements \jars\contract\Client
         $request->data = $lines;
         $response = $this->execute($request, $headers);
 
-        return json_decode($response);
+        $lines = json_decode($response);
+
+        if ($lines === null) {
+            error_log($response);
+        }
+
+        return $lines;
     }
 
     public function version(): ?string
