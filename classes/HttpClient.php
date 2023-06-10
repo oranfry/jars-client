@@ -41,6 +41,88 @@ class HttpClient implements \jars\contract\Client
         return $this->token;
     }
 
+    private function executeAndJsonDecodeArray(ApiRequest $request, ?array &$response_headers = null): array
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, 'array');
+    }
+
+    private function executeAndJsonDecodeString(ApiRequest $request, ?array &$response_headers = null): string
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, 'string');
+    }
+
+    private function executeAndJsonDecodeNullableString(ApiRequest $request, ?array &$response_headers = null): ?string
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, '?string');
+    }
+
+    private function executeAndJsonDecodeInt(ApiRequest $request, ?array &$response_headers = null): int
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, 'int');
+    }
+
+    private function executeAndJsonDecodeNullableInt(ApiRequest $request, ?array &$response_headers = null): int
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, '?int');
+    }
+
+    private function executeAndJsonDecodeObject(ApiRequest $request, ?array &$response_headers = null): object
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, 'object');
+    }
+
+    private function executeAndJsonDecodeNullableObject(ApiRequest $request, ?array &$response_headers = null): ?object
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, '?object');
+    }
+
+    private function executeAndJsonDecodeBool(ApiRequest $request, ?array &$response_headers = null): bool
+    {
+        return $this->executeAndJsonDecode($request, $response_headers, 'bool');
+    }
+
+    private function executeAndJsonDecode(ApiRequest $request, ?array &$response_headers = null, $expect_type = null)
+    {
+        $response = $this->execute($request, $response_headers);
+        $result = json_decode($response);
+
+        if ($response !== 'null' && $result === null) {
+            error_log('Oops, expected valid JSON but got something else: ' . substr(preg_replace('/\s+/', ' ', var_export($response, true)), 0, 120));
+
+            throw new Exception('Invalid response received from jars');
+        }
+
+        $right_type = match($expect_type) {
+            '?array' => is_null($result) || is_array($result),
+            '?bool' => is_null($result) || is_bool($result),
+            '?float' => is_null($result) || is_float($result),
+            '?int' => is_null($result) || is_int($result),
+            '?numeric' => is_null($result) || is_numeric($result),
+            '?object' => is_null($result) || is_object($result),
+            '?scalar' => is_null($result) || is_scalar($result),
+            '?string' => is_null($result) || is_string($result),
+            'array' => is_array($result),
+            'bool' => is_bool($result),
+            'float' => is_float($result),
+            'int' => is_int($result),
+            'nonscalar' => !is_scalar($result),
+            'numeric' => is_numeric($result),
+            'object' => is_object($result),
+            'scalar' => is_scalar($result),
+            'string' => is_string($result),
+            null => true,
+            default => false,
+        };
+
+        if (!$right_type) {
+            error_log("Oops, expected a $expect_type. If it helps, gettype() told me this is: " . gettype($result));
+
+            throw new Exception('Type-mismatched response received from jars');
+        }
+
+        return $result;
+    }
+
     private function execute(ApiRequest $request, ?array &$response_headers = null)
     {
         if ($response_headers == null) {
@@ -116,9 +198,9 @@ class HttpClient implements \jars\contract\Client
     public function touch(): ?object
     {
         if ($this->touched === null) {
-            $data = json_decode($this->execute(new ApiRequest('/touch')));
+            $data = $this->executeAndJsonDecodeObject(new ApiRequest('/touch'));
 
-            if (!is_object($data) || property_exists($data, 'error')) {
+            if (property_exists($data, 'error')) {
                 return null;
             }
 
@@ -130,29 +212,19 @@ class HttpClient implements \jars\contract\Client
 
     public function login(string $username, string $password): ?string
     {
-        $request = new ApiRequest('/auth/login');
-        $request->data = (object) [
+        $request = new ApiRequest('/auth/login', null, (object) [
             'username' => $username,
             'password' => $password,
-        ];
+        ]);
 
-        $response = json_decode($this->execute($request));
-
-        if (is_object($response) && @$response->token) {
-            $this->token = $response->token;
-        }
-
-        return $response;
+        return $this->executeAndJsonDecodeNullableString($request);
     }
 
     public function logout(): bool
     {
-        $request = new ApiRequest('/auth/logout');
-        $request->method = 'POST';
+        $request = new ApiRequest('/auth/logout', 'POST');
 
-        $response = json_decode($this->execute($request));
-
-        return $response->success ?? false;
+        return $this->executeAndJsonDecodeBool($request);
     }
 
     public function group(string $report, string $group, ?string $min_version = null)
@@ -163,7 +235,7 @@ class HttpClient implements \jars\contract\Client
             $request->headers[] = 'X-Min-Version: ' . $min_version;
         }
 
-        return json_decode($this->execute($request));
+        return $this->executeAndJsonDecode($request);
     }
 
     public function groups(string $report, ?string $min_version = null): array
@@ -174,34 +246,34 @@ class HttpClient implements \jars\contract\Client
             $request->headers[] = 'X-Min-Version: ' . $min_version;
         }
 
-        return json_decode($this->execute($request));
+        return $this->executeAndJsonDecodeArray($request);
     }
 
     public function save(array $lines): array
     {
         $request = new ApiRequest('/');
         $request->data = $lines;
-        $response = $this->execute($request, $headers);
+        $result = $this->executeAndJsonDecodeArray($request, $headers);
 
         $this->version = $headers['X-Version'];
 
-        return json_decode($response);
+        return $result;
     }
 
     public function delete(string $linetype, string $id): array
     {
         $request = new ApiRequest('/' . $linetype . '/' . $id);
         $request->method = 'DELETE';
-        $response = $this->execute($request, $headers);
+        $result = $this->executeAndJsonDecodeArray($request, $headers);
 
         $this->version = $headers['X-Version'];
 
-        return json_decode($response);
+        return $result;
     }
 
     public function get(string $linetype, string $id): ?object
     {
-        return json_decode($this->execute(new ApiRequest("/{$linetype}/{$id}")));
+        return $this->executeAndJsonDecodeNullableObject(new ApiRequest("/{$linetype}/{$id}"));
     }
 
     public function record(string $table, string $id, ?string &$content_type = null, ?string &$filename = null): ?string
@@ -216,22 +288,14 @@ class HttpClient implements \jars\contract\Client
 
     public function fields(string $linetype): array
     {
-        return json_decode($this->execute(new ApiRequest("/fields/{$linetype}")));
+        return $this->executeAndJsonDecodeArray(new ApiRequest("/fields/{$linetype}"));
     }
 
     public function preview(array $lines): array
     {
-        $request = new ApiRequest('/preview');
-        $request->data = $lines;
-        $response = $this->execute($request, $headers);
+        $request = new ApiRequest('/preview', null, $lines);
 
-        $lines = json_decode($response);
-
-        if ($lines === null) {
-            error_log($response);
-        }
-
-        return $lines;
+        return this->executeAndJsonDecodeArray($request);
     }
 
     public function version(): ?string
@@ -241,23 +305,19 @@ class HttpClient implements \jars\contract\Client
 
     public function h2n(string $h): ?int
     {
-        return json_decode($this->execute(new ApiRequest('/h2n/' . $h)));
+        return $this->executeAndJsonDecodeNullableInt(new ApiRequest('/h2n/' . $h));
     }
 
     public function linetypes(?string $report = null): array
     {
-        if ($report) {
-            $endpoint = '/report/' . $report . '/linetypes';
-        } else {
-            $endpoint = '/linetypes';
-        }
+        $request = new ApiRequest(($report ? '/report/' . $report : null) . '/linetypes');
 
-        return json_decode($this->execute(new ApiRequest($endpoint)));
+        return $this->executeAndJsonDecodeArray($request);
     }
 
     public function n2h(int $n): string
     {
-        return json_decode($this->execute(new ApiRequest('/n2h/' . $n)));
+        return $this->executeAndJsonDecodeString(new ApiRequest('/n2h/' . $n));
     }
 
     public static function of(string $url): static
@@ -267,13 +327,11 @@ class HttpClient implements \jars\contract\Client
 
     public function refresh(): string
     {
-        $this->execute(new ApiRequest('/refresh', $headers));
-
-        return $headers['X-Version'];
+        return $this->executeAndJsonDecodeString(new ApiRequest('/refresh'));
     }
 
     public function reports(): array
     {
-        return json_decode($this->execute(new ApiRequest('/reports')));
+        return $this->executeAndJsonDecodeArray(new ApiRequest('/reports'));
     }
 }

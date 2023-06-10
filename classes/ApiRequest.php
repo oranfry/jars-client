@@ -4,9 +4,9 @@ namespace jars\client;
 
 class ApiRequest
 {
-    public $endpoint;
-    public $data;
     public $contentType = 'application/json';
+    public $data = null;
+    public $endpoint = null;
     public $headers = [];
     public $method = 'GET';
 
