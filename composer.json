@@ -1,19 +1,11 @@
 {
-    "name": "oranfry/jars-client",
-    "version": "1.0.0",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/oranfry/jars-contracts.git"
-        }
-    ],
-    "require": {
-        "oranfry/jars-contracts": "*"
-    },
     "autoload": {
         "psr-4": {
-            "": "src/php/class",
-            "jars\\client\\": "classes"
+            "jars\\client\\": ""
         }
+    },
+    "name": "oranfry/jars-client",
+    "require": {
+        "oranfry/jars-contracts": "*"
     }
 }

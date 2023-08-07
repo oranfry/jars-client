@@ -2,6 +2,8 @@
 
 namespace jars\client;
 
+use jars\contract\Constants;
+
 class HttpClient implements \jars\contract\Client
 {
     protected $asuser;
@@ -238,9 +240,13 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecode($request);
     }
 
-    public function groups(string $report, ?string $min_version = null): array
+    public function groups(string $report, string $prefix = '', ?string $min_version = null): array
     {
-        $request = new ApiRequest('/report/' . $report . '/groups');
+        if (!preg_match('/^' . Constants::GROUP_PREFIX_PATTERN . '$/', $prefix)) {
+            throw new Exception('Invalid prefix');
+        }
+
+        $request = new ApiRequest('/report/' . $report . '/' . $prefix);
 
         if ($min_version) {
             $request->headers[] = 'X-Min-Version: ' . $min_version;
