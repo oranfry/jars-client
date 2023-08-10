@@ -301,7 +301,7 @@ class HttpClient implements \jars\contract\Client
     {
         $request = new ApiRequest('/preview', null, $lines);
 
-        return this->executeAndJsonDecodeArray($request);
+        return $this->executeAndJsonDecodeArray($request);
     }
 
     public function version(): ?string
