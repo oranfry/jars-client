@@ -229,7 +229,7 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeBool($request);
     }
 
-    public function group(string $report, string $group, ?string $min_version = null)
+    public function group(string $report, string $group = '', ?string $min_version = null)
     {
         $request = new ApiRequest('/report/' . $report . '/' . $group);
 
