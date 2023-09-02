@@ -231,7 +231,7 @@ class HttpClient implements \jars\contract\Client
 
     public function group(string $report, string $group = '', ?string $min_version = null)
     {
-        $request = new ApiRequest('/report/' . $report . '/' . $group);
+        $request = new ApiRequest('/report/' . $report . ($group ? '/' . $group : null));
 
         if ($min_version) {
             $request->headers[] = 'X-Min-Version: ' . $min_version;
