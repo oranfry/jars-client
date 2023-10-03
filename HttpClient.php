@@ -6,24 +6,24 @@ use jars\contract\Constants;
 
 class HttpClient implements \jars\contract\Client
 {
-    protected $asuser;
-    protected $content_type;
-    protected $filename;
-    protected $token;
-    protected $touched;
-    protected $url;
-    protected $version;
+    protected ?string $content_type = null;
+    protected ?string $filename = null;
+    protected ?int $timeout = null;
+    protected ?string $token = null;
+    protected ?object $touched = null;
+    protected string $url;
+    protected ?string $version = null;
 
     public function __construct(string $url)
     {
         $this->url = $url;
     }
 
-    public function url()
+    public function url(?string $url = null)
     {
-        if (func_num_args()) {
+        if ($url !== null) {
             $prev = $this->url;
-            $this->url = (string) func_get_arg(0);
+            $this->url = $url;
 
             return $prev;
         }
@@ -31,16 +31,28 @@ class HttpClient implements \jars\contract\Client
         return $this->url;
     }
 
-    public function token()
+    public function token(?string $token = null)
     {
-        if (func_num_args()) {
+        if ($token !== null) {
             $prev = $this->token;
-            $this->token = (string) func_get_arg(0);
+            $this->token = $token;
 
             return $prev;
         }
 
         return $this->token;
+    }
+
+    public function timeout(?int $timeout = null)
+    {
+        if ($timeout !== null) {
+            $prev = $this->timeout;
+            $this->timeout = $timeout !== -1 ? $timeout : null;
+
+            return $prev;
+        }
+
+        return $this->timeout;
     }
 
     private function executeAndJsonDecodeArray(ApiRequest $request, ?array &$response_headers = null): array
@@ -174,7 +186,7 @@ class HttpClient implements \jars\contract\Client
                 $this->version = $groups[1];
             }
 
-            if (preg_match('/^Content-Type:\s*([a-f0-9]{64})$/i', trim($header_line), $groups)) {
+            if (preg_match('/^Content-Type:\s*([^;]+)/i', trim($header_line), $groups)) {
                 $this->content_type = $groups[1];
             }
 
@@ -184,6 +196,10 @@ class HttpClient implements \jars\contract\Client
 
             return strlen($header_line);
         });
+
+        if ($this->timeout !== null) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        }
 
         $this->content_type = null;
         $this->filename = null;
