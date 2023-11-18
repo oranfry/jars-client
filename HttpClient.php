@@ -215,7 +215,7 @@ class HttpClient implements \jars\contract\Client
 
             if (
                 !$info
-                || !preg_match('/^jars\\\\contract\\\\[A-Z][A-Za-z]+Exception$/', $info->exception ?? '')
+                || !preg_match('/^jars\\\\contract\\\\([A-Z][A-Za-z]*)?Exception$/', $info->exception ?? '')
                 || !class_exists($class = '\\' . $info->exception)
             ) {
                 throw new TransportException();
