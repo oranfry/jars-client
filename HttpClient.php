@@ -33,7 +33,7 @@ class HttpClient implements \jars\contract\Client
         return $this->url;
     }
 
-    public function token(?string $token = null): string|self
+    public function token(?string $token = null): null|string|self
     {
         if (func_num_args()) {
             $this->token = $token;
