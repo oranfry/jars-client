@@ -2,7 +2,10 @@
 
 namespace jars\client;
 
+use jars\contract\BadTokenException;
 use jars\contract\Constants;
+use jars\contract\Exception;
+use jars\contract\TransportException;
 
 class HttpClient implements \jars\contract\Client
 {
@@ -21,23 +24,21 @@ class HttpClient implements \jars\contract\Client
 
     public function url(?string $url = null)
     {
-        if ($url !== null) {
-            $prev = $this->url;
+        if (func_num_args()) {
             $this->url = $url;
 
-            return $prev;
+            return $this;
         }
 
         return $this->url;
     }
 
-    public function token(?string $token = null)
+    public function token(?string $token = null): string|self
     {
-        if ($token !== null) {
-            $prev = $this->token;
+        if (func_num_args()) {
             $this->token = $token;
 
-            return $prev;
+            return $this;
         }
 
         return $this->token;
@@ -45,11 +46,10 @@ class HttpClient implements \jars\contract\Client
 
     public function timeout(?int $timeout = null)
     {
-        if ($timeout !== null) {
-            $prev = $this->timeout;
-            $this->timeout = $timeout !== -1 ? $timeout : null;
+        if (func_num_args()) {
+            $this->timeout = $timeout;
 
-            return $prev;
+            return $this;
         }
 
         return $this->timeout;
@@ -210,19 +210,27 @@ class HttpClient implements \jars\contract\Client
             error_log(var_export($result, true));
         }
 
+        if (200 !== $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
+            $info = json_decode($result);
+
+            if (
+                !$info
+                || !preg_match('/^jars\\\\contract\\\\[A-Z][A-Za-z]+Exception$/', $info->exception ?? '')
+                || !class_exists($class = '\\' . $info->exception)
+            ) {
+                throw new TransportException();
+            }
+
+            throw new $class($info->message ?? 'Error response received from jars');
+        }
+
         return $result;
     }
 
-    public function touch(): ?object
+    public function touch(): object
     {
         if ($this->touched === null) {
-            $data = $this->executeAndJsonDecodeObject(new ApiRequest('/touch'));
-
-            if (property_exists($data, 'error')) {
-                return null;
-            }
-
-            $this->touched = $data;
+            $this->touched = $this->executeAndJsonDecodeObject(new ApiRequest('/touch'));
         }
 
         return $this->touched;
