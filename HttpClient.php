@@ -364,4 +364,12 @@ class HttpClient implements \jars\contract\Client
     {
         return $this->executeAndJsonDecodeArray(new ApiRequest('/reports'));
     }
+
+    public function persist(): self
+    {
+        // no need to do anything; each request triggers a persist on the remote
+        // end anyway
+
+        return $this;
+    }
 }
