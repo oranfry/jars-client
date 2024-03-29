@@ -33,7 +33,7 @@ class HttpClient implements \jars\contract\Client
         return $this->url;
     }
 
-    public function token(?string $token = null): null|string|self
+    public function token(?string $token = null): self|string|null
     {
         if (func_num_args()) {
             $this->token = $token;
@@ -253,18 +253,18 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeBool($request);
     }
 
-    public function group(string $report, string $group = '', ?string $min_version = null)
+    public function group(string $report, string $group = '', string|bool|null $min_version = null)
     {
         $request = new ApiRequest('/report/' . $report . ($group ? '/' . $group : null));
 
         if ($min_version) {
-            $request->headers[] = 'X-Min-Version: ' . $min_version;
+            $request->headers[] = 'X-Min-Version: ' . ($min_version === true ? $this->version : $min_version);
         }
 
         return $this->executeAndJsonDecode($request);
     }
 
-    public function groups(string $report, string $prefix = '', ?string $min_version = null): array
+    public function groups(string $report, string $prefix = '', string|bool|null $min_version = null): array
     {
         if (!preg_match('/^' . Constants::GROUP_PREFIX_PATTERN . '$/', $prefix)) {
             throw new Exception('Invalid prefix');
@@ -273,7 +273,7 @@ class HttpClient implements \jars\contract\Client
         $request = new ApiRequest('/report/' . $report . '/' . $prefix);
 
         if ($min_version) {
-            $request->headers[] = 'X-Min-Version: ' . $min_version;
+            $request->headers[] = 'X-Min-Version: ' . ($min_version === true ? $this->version : $min_version);
         }
 
         return $this->executeAndJsonDecodeArray($request);
