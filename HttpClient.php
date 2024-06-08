@@ -281,10 +281,16 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeArray($request);
     }
 
-    public function save(array $lines): array
+    public function save(array $lines, ?string $base_version = null): array
     {
         $request = new ApiRequest('/');
+
         $request->data = $lines;
+
+        if ($base_version) {
+            $request->headers[] = 'X-Base-Version: ' . $base_version;
+        }
+
         $result = $this->executeAndJsonDecodeArray($request, $headers);
 
         $this->version = $headers['X-Version'];
@@ -323,9 +329,13 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeArray(new ApiRequest("/fields/{$linetype}"));
     }
 
-    public function preview(array $lines): array
+    public function preview(array $lines, ?string $base_version = null): array
     {
         $request = new ApiRequest('/preview', null, $lines);
+
+        if ($base_version) {
+            $request->headers[] = 'X-Base-Version: ' . $base_version;
+        }
 
         return $this->executeAndJsonDecodeArray($request);
     }
