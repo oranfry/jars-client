@@ -243,7 +243,9 @@ class HttpClient implements \jars\contract\Client
             'password' => $password,
         ]);
 
-        return $this->executeAndJsonDecodeNullableString($request);
+        $this->token($token = $this->executeAndJsonDecodeNullableString($request));
+
+        return $token;
     }
 
     public function logout(): bool
