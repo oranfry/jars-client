@@ -153,11 +153,11 @@ class HttpClient implements \jars\contract\Client
 
         if (!in_array($request->method, ['GET', 'POST'])) {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request->method);
-        } elseif ($request->data || $request->method == 'POST') {
+        } elseif (isset($request->data) || $request->method == 'POST') {
             curl_setopt($ch, CURLOPT_POST, true);
         }
 
-        if ($request->data) {
+        if (isset($request->data)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($request->data));
         }
 
@@ -283,7 +283,12 @@ class HttpClient implements \jars\contract\Client
 
     public function save(array $lines, ?string $base_version = null): array
     {
+        if (!$lines) {
+            return $lines; // empty array, so return unchanged
+        }
+
         $request = new ApiRequest('/');
+        $request->method = 'POST';
 
         $request->data = $lines;
 
