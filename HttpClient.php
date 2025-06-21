@@ -38,6 +38,27 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeArray(new ApiRequest("/fields/{$linetype}"));
     }
 
+    public function flatten(?object $object = null): ?object
+    {
+        $return = null;
+
+        foreach (func_get_args() as $_object) {
+            if (!is_object($_object)) {
+                throw new Exception('All arguments should be objects');
+            }
+
+            $return ??= $_object;
+
+            foreach (array_keys(get_object_vars($_object)) as $key) {
+                if (!is_null($_object->$key) && !is_scalar($_object->$key)) {
+                    unset($_object->$key);
+                }
+            }
+        }
+
+        return $return;
+    }
+
     public function get(string $linetype, string $id): ?object
     {
         return $this->executeAndJsonDecodeNullableObject(new ApiRequest("/{$linetype}/{$id}"));
