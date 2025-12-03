@@ -262,6 +262,15 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecode($request, $response_headers, 'string');
     }
 
+    public function info(?string $varname = null): array|string|null
+    {
+        if ($varname !== null) {
+            return $this->executeAndJsonDecodeNullableString(new ApiRequest('/info/' . $varname));
+        }
+
+        return $this->executeAndJsonDecodeArray(new ApiRequest('/info'));
+    }
+
     public function h2n(string $h): ?int
     {
         return $this->executeAndJsonDecodeNullableInt(new ApiRequest('/h2n/' . $h));
@@ -274,12 +283,12 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeArray($request);
     }
 
-    public function login(string $username, string $password): ?string
+    public function login(?string $username = null, ?string $password = null): ?string
     {
-        $request = new ApiRequest('/auth/login', null, (object) [
+        $request = new ApiRequest('/auth/login', null, (object) array_filter([
             'username' => $username,
             'password' => $password,
-        ]);
+        ]));
 
         $this->token($token = $this->executeAndJsonDecodeNullableString($request));
 
