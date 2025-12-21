@@ -322,7 +322,11 @@ class HttpClient implements \jars\contract\Client
 
     public function preview(array $lines, ?string $base_version = null): array
     {
-        $request = new ApiRequest('/preview', null, $lines);
+        if (!$lines) {
+            return $lines; // empty array, so return unchanged
+        }
+
+        $request = new ApiRequest('/preview', 'POST', $lines);
 
         if ($base_version) {
             $request->headers[] = 'X-Base-Version: ' . $base_version;
@@ -357,10 +361,7 @@ class HttpClient implements \jars\contract\Client
             return $lines; // empty array, so return unchanged
         }
 
-        $request = new ApiRequest('/');
-        $request->method = 'POST';
-
-        $request->data = $lines;
+        $request = new ApiRequest('/', 'POST', $lines);
 
         if ($base_version) {
             $request->headers[] = 'X-Base-Version: ' . $base_version;
