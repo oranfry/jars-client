@@ -1,6 +1,6 @@
 <?php
 
-namespace jars\client;
+namespace OranFry\Jars\Client;
 
 use jars\contract\BadTokenException;
 use jars\contract\Constants;
