@@ -64,18 +64,22 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeNullableObject(new ApiRequest("/{$linetype}/{$id}"));
     }
 
-    public function group(string $report, string $group = '', string|bool|null $min_version = null)
+    public function group(string $report, string $group = '', string|bool|null $min_version = null, ?int $timeout = null)
     {
         $request = new ApiRequest('/report/' . $report . ($group ? '/' . $group : null));
 
         if ($min_version) {
             $request->headers[] = 'X-Min-Version: ' . ($min_version === true ? $this->version : $min_version);
+
+            if (null !== $timeout) {
+                $request->headers[] = 'X-Timeout: ' . $timeout;
+            }
         }
 
         return $this->executeAndJsonDecode($request);
     }
 
-    public function groups(string $report, string $prefix = '', string|bool|null $min_version = null): array
+    public function groups(string $report, string $prefix = '', string|bool|null $min_version = null, ?int $timeout = null): array
     {
         if (!preg_match('/^' . Constants::GROUP_PREFIX_PATTERN . '$/', $prefix)) {
             throw new Exception('Invalid prefix');
@@ -85,6 +89,10 @@ class HttpClient implements \jars\contract\Client
 
         if ($min_version) {
             $request->headers[] = 'X-Min-Version: ' . ($min_version === true ? $this->version : $min_version);
+
+            if (null !== $timeout) {
+                $request->headers[] = 'X-Timeout: ' . $timeout;
+            }
         }
 
         return $this->executeAndJsonDecodeArray($request);
@@ -271,11 +279,6 @@ class HttpClient implements \jars\contract\Client
         return $this->executeAndJsonDecodeArray(new ApiRequest('/info'));
     }
 
-    public function h2n(string $h): ?int
-    {
-        return $this->executeAndJsonDecodeNullableInt(new ApiRequest('/h2n/' . $h));
-    }
-
     public function linetypes(?string $report = null): array
     {
         $request = new ApiRequest(($report ? '/report/' . $report : null) . '/linetypes');
@@ -300,11 +303,6 @@ class HttpClient implements \jars\contract\Client
         $request = new ApiRequest('/auth/logout', 'POST');
 
         return $this->executeAndJsonDecodeBool($request);
-    }
-
-    public function n2h(int $n): string
-    {
-        return $this->executeAndJsonDecodeString(new ApiRequest('/n2h/' . $n));
     }
 
     public static function of(string $url): static
@@ -414,10 +412,5 @@ class HttpClient implements \jars\contract\Client
         }
 
         return $this->url;
-    }
-
-    public function version(): ?string
-    {
-        return $this->version;
     }
 }
