@@ -1,7 +1,7 @@
 {
     "autoload": {
         "psr-4": {
-            "jars\\client\\": ""
+            "OranFry\\Jars\\Client\\": ""
         }
     },
     "name": "oranfry/jars-client",

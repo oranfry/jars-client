@@ -1,6 +1,6 @@
 <?php
 
-namespace jars\client;
+namespace OranFry\Jars\Client;
 
 class ApiRequest
 {

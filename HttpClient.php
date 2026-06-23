@@ -1,13 +1,13 @@
 <?php
 
-namespace jars\client;
+namespace OranFry\Jars\Client;
 
-use jars\contract\BadTokenException;
-use jars\contract\Constants;
-use jars\contract\Exception;
-use jars\contract\TransportException;
+use OranFry\Jars\Contract\BadTokenException;
+use OranFry\Jars\Contract\Constants;
+use OranFry\Jars\Contract\Exception;
+use OranFry\Jars\Contract\TransportException;
 
-class HttpClient implements \jars\contract\Client
+class HttpClient implements \OranFry\Jars\Contract\Client
 {
     protected ?string $content_type = null;
     protected ?string $filename = null;
@@ -168,7 +168,7 @@ class HttpClient implements \jars\contract\Client
 
             if (
                 !$info
-                || !preg_match('/^jars\\\\contract\\\\([A-Z][A-Za-z]*)?Exception$/', $info->exception ?? '')
+                || !preg_match('/^OranFry\\\\Jars\\\\Contract\\\\([A-Z][A-Za-z]*)?Exception$/', $info->exception ?? '')
                 || !class_exists($class = '\\' . $info->exception)
             ) {
                 throw new TransportException();
