@@ -64,7 +64,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $this->executeAndJsonDecodeNullableObject(new ApiRequest("/{$linetype}/{$id}"));
     }
 
-    public function group(string $report, string $group = '', string|bool|null $min_version = null)
+    public function group(string $report, string $group = '', int|true|null $min_version = null)
     {
         $request = new ApiRequest('/report/' . $report . ($group ? '/' . $group : null));
 
@@ -75,7 +75,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $this->executeAndJsonDecode($request);
     }
 
-    public function groups(string $report, string $prefix = '', string|bool|null $min_version = null): array
+    public function groups(string $report, string $prefix = '', int|true|null $min_version = null): array
     {
         if (!preg_match('/^' . Constants::GROUP_PREFIX_PATTERN . '$/', $prefix)) {
             throw new Exception('Invalid prefix');
@@ -320,7 +320,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $this;
     }
 
-    public function preview(array $lines, ?string $base_version = null): array
+    public function preview(array $lines, ?int $base_version = null): array
     {
         if (!$lines) {
             return $lines; // empty array, so return unchanged
@@ -355,7 +355,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $this->executeAndJsonDecodeArray(new ApiRequest('/reports'));
     }
 
-    public function save(array $lines, ?string $base_version = null): array
+    public function save(array $lines, ?int $base_version = null): array
     {
         if (!$lines) {
             return $lines; // empty array, so return unchanged
@@ -416,7 +416,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $this->url;
     }
 
-    public function version(): ?string
+    public function version(): ?int
     {
         return $this->version;
     }
