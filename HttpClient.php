@@ -33,6 +33,16 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $result;
     }
 
+    public function extra(?string $key = null)
+    {
+        $endpoint = '/' . implode('/', array_filter([
+            'extra',
+            $key,
+        ]));
+
+        return $this->executeAndJsonDecode(new ApiRequest($endpoint));
+    }
+
     public function fields(string $linetype): array
     {
         return $this->executeAndJsonDecodeArray(new ApiRequest("/fields/{$linetype}"));
