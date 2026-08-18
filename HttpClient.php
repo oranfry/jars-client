@@ -35,12 +35,15 @@ class HttpClient implements \OranFry\Jars\Contract\Client
 
     public function extra(?string $key = null)
     {
-        $endpoint = '/' . implode('/', array_filter([
-            'extra',
-            $key,
-        ]));
+        if ($key !== null) {
+            return $this->executeAndJsonDecode(
+                new ApiRequest('/extra/' . $key),
+            );
+        }
 
-        return $this->executeAndJsonDecode(new ApiRequest($endpoint));
+        return (array) $this->executeAndJsonDecodeObject(
+            new ApiRequest('/extra'),
+        );
     }
 
     public function fields(string $linetype): array
