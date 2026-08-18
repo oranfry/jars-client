@@ -278,7 +278,7 @@ class HttpClient implements \OranFry\Jars\Contract\Client
             return $this->executeAndJsonDecodeNullableString(new ApiRequest('/info/' . $varname));
         }
 
-        return $this->executeAndJsonDecodeArray(new ApiRequest('/info'));
+        return (array) $this->executeAndJsonDecodeObject(new ApiRequest('/info'));
     }
 
     public function h2n(string $h): ?int
