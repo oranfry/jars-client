@@ -387,6 +387,11 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $result;
     }
 
+    public function saveOne(object $line, ?int $base_version = null): object
+    {
+        return $this->save([$line])[0];
+    }
+
     public function timeout(?int $timeout = null)
     {
         if (func_num_args()) {
