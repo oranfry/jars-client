@@ -72,9 +72,11 @@ class HttpClient implements \OranFry\Jars\Contract\Client
         return $return;
     }
 
-    public function get(string $linetype, string $id): ?object
+    public function get(string $linetype, string $id, array $children = []): ?object
     {
-        return $this->executeAndJsonDecodeNullableObject(new ApiRequest("/{$linetype}/{$id}"));
+        $request = new ApiRequest("/get/{$linetype}/{$id}", 'POST', compact('children'));
+
+        return $this->executeAndJsonDecodeNullableObject($request);
     }
 
     public function group(string $report, string $group = '', int|true|null $min_version = null)
